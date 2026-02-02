@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Save Kilgannon (Not Burger Boy)</title>
+  <style>
+    :root{
+      --bg:#0b0f17;
+      --card: rgba(255,255,255,.08);
+      --border: rgba(255,255,255,.14);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.72);
+      --accent:#7cf6c1;
+      --danger:#ff5a7a;
+      --warn:#ffd56a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background:
+        radial-gradient(1200px 600px at 15% 20%, rgba(124,246,193,.18), transparent 60%),
+        radial-gradient(900px 500px at 85% 15%, rgba(255,90,122,.16), transparent 60%),
+        radial-gradient(800px 500px at 50% 95%, rgba(255,213,106,.14), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+    .card{
+      width:min(920px, 100%);
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:18px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+    }
+    .title{
+      font-size: clamp(22px, 2.6vw, 34px);
+      line-height:1.08;
+      margin:0 0 10px;
+      letter-spacing:-0.02em;
+    }
+    .subtitle{
+      margin:0 0 14px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .question{
+      font-size: clamp(18px, 2.2vw, 26px);
+      line-height:1.15;
+      margin:0 0 16px;
+      padding:14px;
+      border-radius:14px;
+      border:1px dashed rgba(255,255,255,.22);
+      background: rgba(0,0,0,.15);
+    }
+    .buttons{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin: 6px 0 10px;
+    }
+    button{
+      border:1px solid rgba(255,255,255,.18);
+      color:var(--text);
+      background: rgba(255,255,255,.08);
+      border-radius:14px;
+      padding:12px 16px;
+      font-size:16px;
+      cursor:pointer;
+      transition: transform .08s ease, background .15s ease, border-color .15s ease, filter .15s ease;
+      user-select:none;
+    }
+    button:hover{ background: rgba(255,255,255,.12); }
+    button:active{ transform: scale(.98); }
+    button:focus{ outline: 3px solid rgba(124,246,193,.22); outline-offset:2px; }
+
+    /* "Yes" is the wrong answer */
+    .yes{ border-color: rgba(255,90,122,.38); background: rgba(255,90,122,.12); }
+
+    /* "No" is the correct answer */
+    .no{
+      border-color: rgba(124,246,193,.45);
+      background: rgba(124,246,193,.10);
+      transform-origin:center;
+      font-weight:800;
+    }
+
+    .status{
+      margin-top:12px;
+      font-size:14px;
+      color:var(--muted);
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.14);
+      white-space:nowrap;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:99px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(124,246,193,.16);
+    }
+    .dot.warn{ background: var(--warn); box-shadow: 0 0 0 4px rgba(255,213,106,.16); }
+    .dot.danger{ background: var(--danger); box-shadow: 0 0 0 4px rgba(255,90,122,.16); }
+
+    /* Toast popup */
+    .toastWrap{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      display: grid;
+      gap: 10px;
+      width: min(720px, calc(100% - 24px));
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .toast{
+      pointer-events: auto;
+      background: rgba(0,0,0,.55);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 16px;
+      padding: 12px 12px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: start;
+
+      /* float-up animation (duration set in JS) */
+      animation: floatUp linear forwards;
+    }
+
+    /* Floating up + fading out */
+    @keyframes floatUp {
+      0%   { transform: translateY(20px);  opacity: 0; }
+      10%  { opacity: 1; }
+      80%  { opacity: 1; }
+      100% { transform: translateY(-40px); opacity: 0; }
+    }
+
+    .toast p{ margin:0; font-size:14px; line-height:1.25; color: rgba(255,255,255,.9); }
+    .toast p strong{ color: rgba(255,255,255,.96); }
+    .toast .x{
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.10);
+      color: rgba(255,255,255,.9);
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .toast .x:hover{ background: rgba(255,255,255,.14); }
+
+    .footer{ margin-top:14px; font-size:12px; color: rgba(255,255,255,.58); }
+
+    .shake{ animation: shake .25s ease-in-out; }
+    @keyframes shake{
+      0%{ transform: translateX(0); }
+      25%{ transform: translateX(-3px); }
+      50%{ transform: translateX(3px); }
+      75%{ transform: translateX(-2px); }
+      100%{ transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+  <main class="card" aria-labelledby="mainTitle">
+    <h1 class="title" id="mainTitle">Save Kilgannon (Not Burger Boy) 🍔🚫</h1>
+    <p class="subtitle">This is a totally fair vote and not propaganda. Definitely.</p>
+
+    <div class="question" id="mainQuestion">
+      <strong>If Kilgannon loses the FPL Draft league, does he have to become the burger boy?</strong>
+    </div>
+
+    <div class="buttons">
+      <button class="yes" id="yesBtn" type="button">Yes (Absolutely Not) ❌</button>
+      <button class="no" id="noBtn" type="button">No (Correct) ✅</button>
+    </div>
+
+    <div class="status" id="statusRow">
+      <span class="pill"><span class="dot" id="moraleDot"></span> <span id="moraleText">Morale: confident (because we’re cheating)</span></span>
+      <span class="pill"><span class="dot warn"></span> <span id="sizeText">No-button size: respectable</span></span>
+      <span class="pill"><span class="dot danger"></span> <span id="yesCountText">Yes clicks: 0</span></span>
+    </div>
+
+    <p class="footer" id="footerText">
+      Mechanic: every time someone clicks “Yes”, the “No” button gets bigger — because that’s what they deserve.
+    </p>
+
+    <!-- Final verdict block (hidden until NO is clicked) -->
+    <div id="finalVerdict" style="display:none; margin-top:18px;">
+      <div class="question" style="border-style: solid;">
+        <strong>✅ CONFIRMED:</strong><br><br>
+        Kilgannon <strong>does NOT</strong> need to become the Burger Boy — even if he loses the FPL Draft league.
+        <br><br>
+        The matter is settled. Screenshots will be taken.
+      </div>
+    </div>
+  </main>
+
+  <div class="toastWrap" id="toastWrap" aria-live="polite" aria-relevant="additions"></div>
+
+<script>
+  const yesBtn = document.getElementById("yesBtn");
+  const noBtn  = document.getElementById("noBtn");
+  const toastWrap = document.getElementById("toastWrap");
+
+  const moraleDot  = document.getElementById("moraleDot");
+  const moraleText = document.getElementById("moraleText");
+  const sizeText   = document.getElementById("sizeText");
+  const yesCountText = document.getElementById("yesCountText");
+
+  const buttonsRow = document.querySelector(".buttons");
+  const subtitleEl = document.querySelector(".subtitle");
+  const footerEl = document.getElementById("footerText");
+  const finalVerdictEl = document.getElementById("finalVerdict");
+
+  let yesClicks = 0;
+  let noScale = 1;
+  let verdictLocked = false;
+
+  // Longer popups
+  const SHORT_TOAST = 6500;
+  const LONG_TOAST  = 8500;
+  const BOSS_TOAST  = 10500;
+
+  const lads = [
+    { name: "Leahy",  nick: "Ryan K4 Leahy" },
+    { name: "Fitz",   nick: "Eoin Ginger Fitz" },
+    { name: "Jack",   nick: "Jack (Loves His Job) Hennessy" },
+    { name: "Paul",   nick: "Paul Potts Cotts" },
+    { name: "Malone", nick: "Midman Malone" },
+    { name: "Uncs",   nick: "Uncs" }
+  ];
+
+  function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+  const tribunalLines = [
+    "Welcome to the Anti-Burger-Boy campaign. Donations accepted in clean sheets.",
+    "Reminder: clicking YES is suspicious behaviour.",
+    "This vote is being audited by independent observers (Kilgannon on his laptop).",
+    "The No button is the truth. The Yes button is banter. Choose wisely.",
+    "FPL Draft is 40% skill, 60% chaos, and 100% someone blaming the app."
+  ];
+
+  // Popups roast the lads FOR trying to make you burger boy
+  const mildRoasts = [
+    (p) => `${p.nick} clicked YES once and immediately blamed “the app.”`,
+    (p) => `${p.nick} is “manifesting” burger boy energy. Please get a job.`,
+    (p) => `${p.nick} says it’s “only banter” like we can’t see the agenda.`
+  ];
+
+  const spicyRoasts = [
+    (p) => `${p.nick} is pushing burger boy propaganda because his team can’t speak for itself.`,
+    (p) => `${p.nick} wants Kilgannon in an apron because it distracts from their dodgy draft.`,
+    (p) => `${p.nick} talks big for someone who’s one injury crisis away from tears.`
+  ];
+
+  const nuclearRoasts = [
+    (p) => `${p.nick} is campaigning for burger boy because they fear Kilgannon’s comeback arc.`,
+    (p) => `${p.nick} is allergic to accountability: “it’s unlucky” — mate it’s YOUR lineup.`,
+    (p) => `${p.nick} is hoarding mids like Midman Malone: no plan, just vibes.`
+  ];
+
+  const finalBoss = [
+    () => `🚨 <strong>PUBLIC SERVICE ANNOUNCEMENT:</strong> Anyone clicking YES is officially “Burger Boy Curious.”`,
+    () => `🍔 <strong>VERDICT:</strong> The league tried to summon Burger Boy. The spell has been blocked by the Giant NO Button.`,
+    () => `🧾 <strong>AUDIT COMPLETE:</strong> YES clicks reclassified as “copium” and will not be counted.`
+  ];
+
+  function getEscalatedPopup(){
+    const lad = pick(lads);
+    if (yesClicks < 3) return `<strong>Spotted:</strong> ${pick(mildRoasts)(lad)}`;
+    if (yesClicks < 6) return `<strong>Update:</strong> ${pick(spicyRoasts)(lad)}`;
+    if (yesClicks < 9) return `<strong>Alert:</strong> ${pick(nuclearRoasts)(lad)}`;
+    return pick(finalBoss)();
+  }
+
+  function showToast(html, ms){
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.style.animationDuration = ms + "ms";
+
+    const p = document.createElement("p");
+    p.innerHTML = html;
+
+    const x = document.createElement("button");
+    x.className = "x";
+    x.type = "button";
+    x.textContent = "Close";
+    x.addEventListener("click", () => t.remove());
+
+    t.appendChild(p);
+    t.appendChild(x);
+    toastWrap.prepend(t);
+
+    // Keep max 3 floating toasts
+    while (toastWrap.children.length > 3) toastWrap.removeChild(toastWrap.lastChild);
+
+    setTimeout(() => {
+      if (t.isConnected) t.remove();
+    }, ms);
+  }
+
+  function updateUI(){
+    yesCountText.textContent = `Yes clicks: ${yesClicks}`;
+
+    if (yesClicks === 0) {
+      moraleDot.className = "dot";
+      moraleText.textContent = "Morale: confident (because we’re cheating)";
+      sizeText.textContent = "No-button size: respectable";
+    } else if (yesClicks < 4) {
+      moraleDot.className = "dot warn";
+      moraleText.textContent = "Morale: mildly offended";
+      sizeText.textContent = `No-button size: growing (${Math.round(noScale * 100)}%)`;
+    } else if (yesClicks < 8) {
+      moraleDot.className = "dot danger";
+      moraleText.textContent = "Morale: aggressively defending the truth";
+      sizeText.textContent = `No-button size: enormous (${Math.round(noScale * 100)}%)`;
+    } else {
+      moraleDot.className = "dot danger";
+      moraleText.textContent = "Morale: unbreakable. Apron rejected.";
+      sizeText.textContent = `No-button size: the only valid opinion (${Math.round(noScale * 100)}%)`;
+    }
+  }
+
+  // Seed popups
+  showToast(`<strong>System:</strong> ${pick(tribunalLines)}`, LONG_TOAST);
+  showToast(getEscalatedPopup(), LONG_TOAST);
+
+  yesBtn.addEventListener("click", () => {
+    if (verdictLocked) return;
+
+    yesClicks++;
+
+    // Clicking YES helps Kilgannon by powering up NO
+    noScale = Math.min(3.2, noScale + 0.18);
+    noBtn.style.transform = `scale(${noScale})`;
+    noBtn.style.fontWeight = (yesClicks > 6) ? "900" : "800";
+    noBtn.style.letterSpacing = (yesClicks > 6) ? "0.02em" : "0";
+
+    showToast(
+      `<strong>Incorrect Vote Logged:</strong> Someone clicked <em>YES</em>. As punishment, the <strong>NO</strong> button has been empowered.`,
+      LONG_TOAST
+    );
+
+    showToast(
+      getEscalatedPopup(),
+      yesClicks >= 9 ? BOSS_TOAST : LONG_TOAST
+    );
+
+    updateUI();
+  });
+
+  noBtn.addEventListener("click", () => {
+    if (verdictLocked) return;
+    verdictLocked = true;
+
+    // Victory popup
+    showToast(
+      `<strong>CONFIRMED:</strong> Kilgannon is officially NOT the Burger Boy. Case closed.`,
+      SHORT_TOAST
+    );
+
+    // Hide buttons (vote over)
+    buttonsRow.style.display = "none";
+
+    // Update title + subtitle
+    document.getElementById("mainTitle").textContent =
+      "Verdict Reached: Kilgannon Is Not Burger Boy 🍔🚫";
+    subtitleEl.textContent =
+      "The league has spoken. Appeals will not be heard.";
+
+    // Show final verdict block
+    finalVerdictEl.style.display = "block";
+
+    // Update footer
+    footerEl.textContent =
+      "Any future Burger Boy allegations will be treated as coping and ignored.";
+
+    // Lock UI state
+    moraleDot.className = "dot";
+    moraleText.textContent = "Morale: vindicated";
+    sizeText.textContent = "No-button size: irrelevant (truth prevailed)";
+  });
+
+  updateUI();
+</script>
+</body>
+</html>
